@@ -1,0 +1,230 @@
+<html>
+
+<head>
+    <title>Zach's To Do List</title>
+</head>
+
+<body>
+    <h1 style="position: absolute; top: 10%; left: 10%;">Task List</h1>
+    <p style="position: absolute; top: 20%; left: 10%;">Use this template to track your personal tasks.</p>
+
+    <!---Update Task Form-->
+    <div id="popup" style = "position: absolute; top: 30%; left: 50%; display: none; background-color: cadetblue; width: 200px; height: 200px;" >
+        <p id="close-box" class="close-box" style="position: relative; top: 10%; left: 70%; color: red; cursor: pointer">close box</p>
+        <h2>Update Task</h2>
+        <form id="update-form"> 
+            <div>
+                <label for="updateName">Task Name</label>
+                <input type ="text" id="updateName" name="name" value="" required >
+             </div>
+
+             <div>
+                <label for="updateStatus">Status of Task</label>
+                <select  id="updateStatus" name="status" >
+                      <option value ='ToDo'>ToDo</option> 
+                      <option value ='Doing'>Doing</option> 
+                      <option value ='Done'>Done</option> 
+                </select>
+             </div>
+
+
+             <div>
+                <input type="submit">
+             </div>
+        </form>
+    </div>
+    <!---Add Task Form-->
+    <form id="task-form" style="position: absolute; top: 15%; left: 80%;"> 
+        <h2>Add a new Task!</h2>
+        <div>
+          <label for="name">Task Name</label>
+          <input type ="text" id="name" name="name" placeholder="Task Name" required >
+       </div>
+       
+       <div>
+          <label for="status">Status of Task</label>
+          <select  id="status" name="status">
+                <option value ='ToDo'>ToDo</option> 
+                <option value ='Doing'>Doing</option> 
+                <option value ='Done'>Done</option> 
+          </select>
+       </div>
+
+       <div>
+          <input type="submit">
+       </div>
+    </form>
+      
+    <h3 style="position: fixed; top: 400px; left: 100px;">To Do</h3>
+    <div id="todo-list" style="position: fixed; top: 450px; left: 100px;"></div>
+
+    <h3 style="position: fixed; top: 400px; left: 400px;">Doing</h3>
+    <div id="doing-list" style="position: fixed; top: 450px; left: 400px;"></div>
+
+    <h3 style="position: fixed; top: 400px; left: 700px;">Done</h3>
+    <div id="done-list" style="position: fixed; top: 450px; left: 700px;"></div>
+
+    <script> 
+
+    document.addEventListener('click', function(event) {
+    if (event.target.classList.contains('remove-task')) {
+        console.log(event);
+        const taskName = event.target.getAttribute('data-id');
+        const taskElement = event.target.parentElement;
+        removeTask(taskName, taskElement);
+    }
+    if(event.target.classList.contains('update-task')) { 
+        console.log(event);
+        const taskName = event.target.getAttribute('data-id');
+        const taskElement = event.target.parentElement;
+        //set place holder to things. 
+
+        const elementId = event.target.getAttribute('data-category');
+
+        let status;
+
+        if(elementId == "todo-list") {
+            status = "ToDo";
+        } else if (elementId == "doing-list"){
+            status = "Doing";
+        } else if (elementId == "done-list") {
+            status = "Done";
+        } else {
+            throw new Error("Element ID is all messed up...");
+        }
+
+        document.getElementById("updateName").value = `${taskName}`;
+        document.getElementById("updateStatus").value = status;
+        document.getElementById("popup").style.display = 'block'; 
+    }
+   if(event.target.classList.contains("close-box")) {
+        document.getElementById("popup").style.display = 'none'; 
+   }
+});
+
+async function removeTask(name, taskElement) {
+    try {
+        console.log(`Removing task: ${name}`);
+        const response = await fetch(`/tasks/${encodeURIComponent(name)}`, { method: 'DELETE' });
+
+        if (!response.ok) {
+            throw new Error(`Failed to delete task: ${name}`);
+        }
+
+        console.log('Removing this element:', taskElement);
+        taskElement.remove(); // Instantly update the UI
+        console.log(`Task "${name}" removed successfully.`);
+    } catch (error) {
+        console.error('Error removing task:', error);
+    }
+}
+    //update task
+    document.querySelector("#update-form").addEventListener('submit', async function(event) {
+        event.preventDefault();
+        console.log('Form submitted');
+        const formData = new FormData(event.target);
+        const task = {
+            name: formData.get('name'),
+            status: formData.get('status')
+        };
+        try {
+            const response = await fetch('/tasks', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(task)
+            })
+
+            if (!response.ok) {
+            console.log('Response:', response);
+            throw new Error('Failed to updating task');
+        }
+            console.log('Task added successfully'); // Debugging
+            
+            const oldTaskElement = document.querySelector(`[data-id="${task.name}"]`).parentElement;
+            
+            oldTaskElement.remove();
+            
+            document.getElementById("popup").style.display = 'none'; 
+
+            await fetchToDoList();
+
+         } catch (error) {
+            console.error('Error updating task:', error);
+         } finally {
+            // Always reset the form fields
+            event.target.reset();
+                
+        }
+    })
+
+    //create task
+    document.getElementById('task-form').addEventListener('submit', async function(event) {
+    event.preventDefault(); // Prevent default form submission
+    console.log('Form submitted'); // Debugging
+
+    const formData = new FormData(event.target);
+    const task = {
+        name: formData.get('name'),
+        status: formData.get('status')
+    };
+    console.log('Task to be sent:', task); // Debugging
+
+
+    try {
+        const response = await fetch('/tasks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(task) // Convert the task object to JSON
+        });
+
+        if (!response.ok) {
+            console.log('Response:', response);
+            throw new Error('Failed to add task');
+        }
+        console.log('Task added successfully'); // Debugging
+
+        // Refresh the task list dynamically
+        await fetchToDoList();
+    } catch (error) {
+        console.error('Error adding task:', error);
+    } finally {
+        // Always reset the form fields
+        event.target.reset();
+    }
+});
+
+        async function fetchTasksByStatus(endpoint, elementId) {
+           try {
+              const response = await fetch(endpoint);
+              const tasks = await response.json();
+
+              // Clear the corresponding task list
+              document.getElementById(elementId).innerHTML = '';
+
+              // Display tasks in the corresponding section
+              tasks.forEach(task => {
+              const taskItem = document.createElement('p');
+              taskItem.innerHTML = `${task.name} <span class="remove-task" data-id="${task.name}" style="color: red; cursor: pointer;">Remove</span>
+              <span class="update-task" data-id="${task.name}" data-category="${elementId}" style="color: blue; cursor: pointer">Update</span>`;
+              //infuse elementID into TaskItem
+              document.getElementById(elementId).appendChild(taskItem);
+        });
+            } catch (error) {
+              console.error(`Error fetching tasks from ${endpoint}:`, error);
+            }
+        }       
+
+        async function fetchToDoList() {
+            console.log('fetchToDoList called');
+            await Promise.all([
+            fetchTasksByStatus('/todo', 'todo-list'),
+            fetchTasksByStatus('/doing', 'doing-list'),
+            fetchTasksByStatus('/done', 'done-list'),
+        ]);
+    }
+    window.onload = fetchToDoList;
+
+    </script>
+</body>
+
+</html>
