@@ -65,6 +65,8 @@
     <div id="done-list" style="position: fixed; top: 450px; left: 700px;"></div>
 
     <script> 
+    
+    let originalTaskName = null;
 
     document.addEventListener('click', function(event) {
     if (event.target.classList.contains('remove-task')) {
@@ -73,35 +75,34 @@
         const taskElement = event.target.parentElement;
         removeTask(taskName, taskElement);
     }
-    if(event.target.classList.contains('update-task')) { 
+    if (event.target.classList.contains('update-task')) {
         console.log(event);
         const taskName = event.target.getAttribute('data-id');
-        const taskElement = event.target.parentElement;
-        //set place holder to things. 
-
         const elementId = event.target.getAttribute('data-category');
 
         let status;
-
-        if(elementId == "todo-list") {
+        if (elementId === "todo-list") {
             status = "ToDo";
-        } else if (elementId == "doing-list"){
+        } else if (elementId === "doing-list") {
             status = "Doing";
-        } else if (elementId == "done-list") {
+        } else if (elementId === "done-list") {
             status = "Done";
         } else {
             throw new Error("Element ID is all messed up...");
         }
 
-        document.getElementById("updateName").value = `${taskName}`;
+        // Set input values for the update popup
+        document.getElementById("updateName").value = taskName;
         document.getElementById("updateStatus").value = status;
-        document.getElementById("popup").style.display = 'block'; 
-    }
-   if(event.target.classList.contains("close-box")) {
-        document.getElementById("popup").style.display = 'none'; 
-   }
-});
+        document.getElementById("popup").style.display = "block";
 
+        // Track the original task name
+        originalTaskName = taskName;
+        }     
+        if (event.target.classList.contains("close-box")) {
+            document.getElementById("popup").style.display = 'none'; 
+        }
+    })
 async function removeTask(name, taskElement) {
     try {
         console.log(`Removing task: ${name}`);
@@ -119,43 +120,51 @@ async function removeTask(name, taskElement) {
     }
 }
     //update task
-    document.querySelector("#update-form").addEventListener('submit', async function(event) {
-        event.preventDefault();
-        console.log('Form submitted');
-        const formData = new FormData(event.target);
-        const task = {
-            name: formData.get('name'),
-            status: formData.get('status')
-        };
-        try {
-            const response = await fetch('/tasks', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(task)
-            })
+    document.querySelector("#update-form").addEventListener("submit", async function(event) {
+    event.preventDefault();
+    console.log("Form submitted");
 
-            if (!response.ok) {
-            console.log('Response:', response);
-            throw new Error('Failed to updating task');
+    const formData = new FormData(event.target);
+    const task = {
+        originalName: originalTaskName, 
+        name: formData.get("name"), // Updated task name
+        status: formData.get("status"), // Updated task status
+    };
+
+    try {
+        // Make PUT request to update task
+        const response = await fetch("/tasks", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(task),
+        });
+
+        if (!response.ok) {
+            console.log("Response:", response);
+            throw new Error("Failed to update task");
         }
-            console.log('Task added successfully'); // Debugging
-            
-            const oldTaskElement = document.querySelector(`[data-id="${task.name}"]`).parentElement;
-            
-            oldTaskElement.remove();
-            
-            document.getElementById("popup").style.display = 'none'; 
 
-            await fetchToDoList();
+        console.log("Task updated successfully");
 
-         } catch (error) {
-            console.error('Error updating task:', error);
-         } finally {
-            // Always reset the form fields
-            event.target.reset();
-                
-        }
-    })
+        // Locate and remove the old task element using the original name
+        const oldTaskElement = document.querySelector(`[data-id="${originalTaskName}"]`).parentElement;
+        oldTaskElement.remove();
+
+        // Hide the popup
+        document.getElementById("popup").style.display = "none";
+
+        // Refresh the task list to reflect the changes
+        await fetchToDoList();
+
+    } catch (error) {
+        console.error("Error updating task:", error);
+    } finally {
+        // Reset form fields and clear the original task name
+        event.target.reset();
+        originalTaskName = null;
+    }
+});
+
 
     //create task
     document.getElementById('task-form').addEventListener('submit', async function(event) {

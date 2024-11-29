@@ -101,12 +101,17 @@ public class App {
     }   
 
     private static void updateTask(Context context) {
-        Task task = context.bodyAsClass(Task.class);
+        Map<String, Object> requestData = context.bodyAsClass(Map.class);
 
+        String originalName = (String) requestData.get("originalName");
+        String newName = (String) requestData.get("name");
+        String status = (String) requestData.get("status");
+
+        
         boolean taskFound = false; 
         
         for (int i = 0; i < theToDoList.getToDo().size(); i++) {
-            if (task.getName().equals(theToDoList.getToDo().get(i).getName())) {
+            if (originalName.equals(theToDoList.getToDo().get(i).getName())) {
                 theToDoList.getToDo().remove(i);
                 taskFound = true;
                 break;
@@ -116,7 +121,7 @@ public class App {
         // Search and remove task from Doing list
         if (!taskFound) {
             for (int i = 0; i < theToDoList.getDoing().size(); i++) {
-                if (task.getName().equals(theToDoList.getDoing().get(i).getName())) {
+                if (originalName.equals(theToDoList.getDoing().get(i).getName())) {
                     theToDoList.getDoing().remove(i);
                     taskFound = true;
                     break;
@@ -127,7 +132,7 @@ public class App {
         // Search and remove task from Done list
         if (!taskFound) {
             for (int i = 0; i < theToDoList.getDone().size(); i++) {
-                if (task.getName().equals(theToDoList.getDone().get(i).getName())) {
+                if (originalName.equals(theToDoList.getDone().get(i).getName())) {
                     theToDoList.getDone().remove(i);
                     taskFound = true;
                     break;
@@ -137,13 +142,13 @@ public class App {
     
         // If task not found, return a 404 error
         if (!taskFound) {
-            context.status(404).result("Task not found: " + task.getName());
+            context.status(404).result("Task not found: " + originalName);
             return;
         }
     
     
 
-        theToDoList.addTask(task.getStatus(), task.getName());
+        theToDoList.addTask(status, newName);
         context.status(200).result("Task removed and added");
 
 

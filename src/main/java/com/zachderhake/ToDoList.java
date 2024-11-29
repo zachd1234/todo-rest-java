@@ -31,5 +31,7 @@ public class ToDoList {
         return done;
     }
 
+    //remove (listtype and index)
+
 }
 
