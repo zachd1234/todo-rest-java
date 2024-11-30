@@ -4,6 +4,9 @@ import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.http.staticfiles.Location;
 import io.javalin.rendering.FileRenderer;
+
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -16,14 +19,19 @@ public class App {
         Javalin app = Javalin.create(config -> {
             config.staticFiles.add(staticFileConfig -> {
                 staticFileConfig.hostedPath = "/";
-                staticFileConfig.directory = "/public";
+                staticFileConfig.directory = "public";
                 staticFileConfig.location = Location.CLASSPATH;
             });
 
             config.fileRenderer((filePath, model, ctx) -> {
                 try {
                     // Read the file content as a String and return it for rendering
-                    return Files.readString(Paths.get(App.class.getResource(filePath).toURI()));
+                    try (InputStream inputStream = App.class.getResourceAsStream("/" + filePath)) {
+                        if (inputStream == null) {
+                            throw new RuntimeException("File not found: " + filePath);
+                        }
+                        return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+                    }
                 } catch (Exception e) {
                     throw new RuntimeException("File rendering error: " + e.getMessage(), e);
                 }
