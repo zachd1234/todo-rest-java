@@ -8,4 +8,4 @@ services:
     ports:
       - port: 7777
         protocol: tcp
-    healthCheckPath: /index.html
+    healthCheckPath: /
