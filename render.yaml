@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: todolist2
+    env: java
+    region: us-central
+    buildCommand: mvn clean package
+    startCommand: java -jar target/todolist2-1.0-SNAPSHOT-shaded.jar
+    plan: free
+    healthCheckPath: /
