@@ -3,6 +3,7 @@ services:
     name: todolist2
     env: docker
     region: us-central
-    image: zachderhake/todolist2-app:latest
+    docker:
+      image: zachderhake/todolist2-app:latest
     plan: free
     healthCheckPath: /index.html
