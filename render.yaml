@@ -3,7 +3,7 @@ services:
     name: todolist2
     env: java
     region: us-central
-    runtime: java
+    runtime: java11 # Render specifies this format, not java or java-11
     buildCommand: mvn clean package
     startCommand: java -jar target/todolist2-1.0-SNAPSHOT-shaded.jar
     plan: free
