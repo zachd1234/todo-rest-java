@@ -1,10 +1,11 @@
 services:
   - type: web
     name: todolist2
-    env: java
+    env: docker
     region: us-central
-    runtime: java11 # Render specifies this format, not java or java-11
-    buildCommand: mvn clean package
-    startCommand: java -jar target/todolist2-1.0-SNAPSHOT-shaded.jar
+    image: zachderhake/todolist2-app:latest
     plan: free
-    healthCheckPath: /
+    ports:
+      - port: 7777
+        protocol: tcp
+    healthCheckPath: /index.html
