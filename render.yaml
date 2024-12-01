@@ -5,7 +5,4 @@ services:
     region: us-central
     image: zachderhake/todolist2-app:latest
     plan: free
-    ports:
-      - port: 7777
-        protocol: tcp
-    healthCheckPath: /
+    healthCheckPath: /index.html
