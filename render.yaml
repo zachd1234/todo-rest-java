@@ -2,8 +2,7 @@ services:
   - type: web
     name: todolist2
     env: docker
-    branch: main
-    dockerfilePath: ./Dockerfile
-    dockerContext: ./
+    region: us-central
+    image: zachderhake/todolist2-app:latest
     plan: free
-    healthCheckPath: /
+    healthCheckPath: /index.html
