@@ -2,4 +2,7 @@ services:
   - type: web
     name: todolist2
     env: docker
+    region: us-central
     image: zachderhake/todolist2-app:latest
+    plan: free
+    healthCheckPath: /index.html
